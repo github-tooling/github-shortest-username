@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const readLastLines = require('read-last-lines');
+
 const puppeteer = require('puppeteer-core');
 require('lodash.product');
 const _ = require('lodash');
@@ -19,26 +21,35 @@ const _ = require('lodash');
   const USERNAME_SELECTOR = '.home-hero-signup > .form-group > dd > auto-check > input';
   await page.click(USERNAME_SELECTOR);
 
-  for (let i of usernames) {
-    await page.keyboard.type(i);
-    await page.waitFor(3000);
-    let result = await page.$('.is-autocheck-successful');
+  await readLastLines.read('logs/successful.txt', 1)
+    .then( async (line) => {
 
-    if (result){
-      console.log('Successful: ' + i);
-      fs.appendFile('logs/successful.txt', `${i}\n`, function (err) {
-        if (err) throw err;
-        console.log('Saved!');
-      });
-    } else {
-	  console.log('Error: ' + i);
-    }
+      if (line === '') line = usernames[0];
 
-    await page.keyboard.down('Control');
-    await page.keyboard.press('KeyA');
-    await page.keyboard.up('Control');
-    await page.keyboard.press('Backspace');
-  }
+      usernames = usernames.splice(usernames.indexOf(line) + 1);
+
+      for (let i of usernames) {
+        await page.keyboard.type(i);
+        await page.waitFor(3000);
+        let result = await page.$('.is-autocheck-successful');
+
+        if (result){
+          console.log('Successful: ' + i);
+          fs.appendFile('logs/successful.txt', `\n${i}`, function (err) {
+            if (err) throw err;
+            console.log('Saved!');
+          });
+        } else {
+          console.log('Error: ' + i);
+        }
+
+        await page.keyboard.down('Control');
+        await page.keyboard.press('KeyA');
+        await page.keyboard.up('Control');
+        await page.keyboard.press('Backspace');
+      }
+
+    });
 
   await browser.close();
 
