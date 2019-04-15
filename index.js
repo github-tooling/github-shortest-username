@@ -9,10 +9,11 @@ const _ = require('lodash');
   const page = await browser.newPage();
   await page.setViewport({ width: 675, height: 600 });
 
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  const letters = "abcdefghijklmnopqrstuvwxyz";
   const arr_letters = letters.split('');
   const success = [];
-  let product = _.product(...Array(2).fill(arr_letters));
+  const length = 4;
+  let product = _.product(...Array(length).fill(arr_letters));
   let usernames = product.map(x => x.join(''));
 
   await page.goto('https://github.com');
@@ -24,9 +25,7 @@ const _ = require('lodash');
     await page.waitFor(3000);
     let result = await page.$('.is-autocheck-successful');
   
-    if (!result){
-      console.log('errored ' + i);
-    } else {
+    if (result){
       success.push(i);
       console.log('successful ' + i);
     }
