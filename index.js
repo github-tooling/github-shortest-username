@@ -1,13 +1,19 @@
 const fs = require('fs');
-
 const readLastLines = require('read-last-lines');
 
 const puppeteer = require('puppeteer-core');
+const { getPlatform } = require('chrome-launcher/dist/utils.js');
+const chromeFinder = require('chrome-launcher/dist/chrome-finder.js');
 require('lodash.product');
 const _ = require('lodash');
 
 (async () => {
-  const browser = await puppeteer.launch({executablePath: "/usr/bin/google-chrome", headless: true});
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || (await(chromeFinder)[getPlatform()]())[0];
+  if (!executablePath) {
+    throw new Error('Chrome / Chromium is not installed.');
+  }
+
+  const browser = await puppeteer.launch({executablePath, headless: false});
   const page = await browser.newPage();
   await page.setViewport({ width: 675, height: 600 });
 
@@ -18,7 +24,7 @@ const _ = require('lodash');
   let usernames = product.map(x => x.join(''));
 
   await page.goto('https://github.com');
-  const USERNAME_SELECTOR = '.home-hero-signup > .form-group > dd > auto-check > input';
+  const USERNAME_SELECTOR = '#user\\[login\\]';
   await page.click(USERNAME_SELECTOR);
 
   await readLastLines.read('logs/successful.txt', 1)
@@ -51,6 +57,6 @@ const _ = require('lodash');
 
     });
 
-  await browser.close();
+  // await browser.close();
 
 })();
